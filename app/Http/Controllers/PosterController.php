@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use Illuminate\Http\Request;
 
 class PosterController extends Controller
@@ -11,7 +12,9 @@ class PosterController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $posts = Post::all();
+
+        return view('home', compact('posts'));
     }
 
     /**
@@ -19,7 +22,7 @@ class PosterController extends Controller
      */
     public function create()
     {
-        //
+        return view('posters.create');
     }
 
     /**
@@ -27,7 +30,18 @@ class PosterController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        Post::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('home');
     }
 
     /**
@@ -35,7 +49,8 @@ class PosterController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $posts = Post::where('user_id', $id)->get();
+        dd($posts);
     }
 
     /**
