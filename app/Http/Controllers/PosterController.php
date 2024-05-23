@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PosterController extends Controller
 {
@@ -35,11 +36,13 @@ class PosterController extends Controller
             'content' => 'required|string',
         ]);
 
-        Post::create([
+        $post = Post::create([
             'title' => $request->title,
-            'content' => $request->content,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
         ]);
+
+        $post->content = $request->content;
+        $post->save();
 
         return redirect()->route('home');
     }
