@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,12 +38,17 @@ class PosterController extends Controller
             'content' => 'required|string',
         ]);
 
+        $config = HTMLPurifier_Config::createDefault();
+        $purifier = new HTMLPurifier($config);
+
+        $cleanContent = $purifier->purify($request->content);
+
         $post = Post::create([
             'title' => $request->title,
             'user_id' => Auth::id(),
         ]);
 
-        $post->content = $request->content;
+        $post->content = $cleanContent;
         $post->save();
 
         return redirect()->route('home');
