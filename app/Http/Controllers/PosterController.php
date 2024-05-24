@@ -7,6 +7,7 @@ use HTMLPurifier;
 use HTMLPurifier_Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class PosterController extends Controller
 {
@@ -59,7 +60,7 @@ class PosterController extends Controller
      */
     public function show(string $id)
     {
-        $posts = Post::where('user_id', $id)->get();
+        $posts = Post::orderBy('created_at', 'desc')->where('user_id', $id)->get();
         dd($posts);
     }
 
@@ -68,7 +69,9 @@ class PosterController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $post = Post::find($id);
+
+        return view('posters.edit', compact('post'));
     }
 
     /**
@@ -76,7 +79,30 @@ class PosterController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        $config = HTMLPurifier_Config::createDefault();
+        $purifier = new HTMLPurifier($config);
+
+        $cleanContent = $purifier->purify($request->content);
+
+        // Encontrar o post
+        $post = Post::find($id);
+
+        if ($post) {
+            // Atualizar o post
+            $post->title = $request->title;
+            $post->content = $cleanContent;
+            $post->save();
+
+            return redirect()->route('home')->with('success', 'Post atualizado com sucesso.');
+        } else {
+            // Redirecionar com mensagem de erro se o post não for encontrado
+            return redirect()->route('home')->with('error', 'Post não encontrado.');
+        }
     }
 
     /**
@@ -84,6 +110,7 @@ class PosterController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        Post::destroy($id);
+        return redirect()->back();
     }
 }
